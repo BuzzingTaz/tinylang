@@ -4,6 +4,7 @@
 #include "tinylang/Basic/TokenKinds.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/SMLoc.h"
+#include <unordered_set>
 using namespace tinylang;
 
 class Token {
@@ -33,12 +34,10 @@ public:
   }
 
   bool is(tok::TokenKind K) const { return Kind == K; }
-  bool isOneOf(tok::TokenKind K1, tok::TokenKind K2) const {
-    return is(K1) || is(K2);
-  }
-  template <typename... Ts>
-  bool isOneOf(tok::TokenKind K1, tok::TokenKind K2, Ts... Ks) const {
-    return is(K1) || isOneOf(K2, Ks...);
+  bool is(std::unordered_set<tok::TokenKind> K) const { return K.count(Kind); }
+
+  template <typename... TSets> bool isOneOf(TSets... KSets) {
+    return (... || is(KSets));
   }
 };
 
