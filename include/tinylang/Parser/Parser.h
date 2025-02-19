@@ -1,19 +1,18 @@
 #ifndef TINYLANG_PARSER_PARSER_H
 #define TINYLANG_PARSER_PARSER_H
 
-#include "tinylang/AST/AST.h"
 #include "tinylang/Basic/TokenKinds.h"
 #include "tinylang/Lexer/Lexer.h"
-#include "llvm/ADT/SmallSet.h"
+#include "tinylang/Parser/NTStart.h"
 #include "llvm/Support/raw_ostream.h"
 #include <sys/types.h>
 #include <unordered_set>
-#include <utility>
 
 class Parser {
   Lexer &Lex;
   Token Tok;
   bool HasError;
+  NTstart StartSet;
 
   void error() {
     llvm::errs() << "Error: unexpected token: " << Tok.getText() << '\n';
@@ -38,11 +37,9 @@ class Parser {
   }
 
   template <class... Tokens> bool skipUntil(Tokens... Toks) {
-    const int NArgs = sizeof...(Toks) + 1;
-    llvm::SmallSet<tok::TokenKind, NArgs> Skipset = {
-        tok::eof, (std::forward<Tokens>(Toks))...};
+    std::unordered_set<tok::TokenKind> Skipset = {tok::eof, Toks...};
     while (true) {
-      if (Skipset.contains(Tok)) {
+      if (Skipset.count(Tok.getKind())) {
         if (Tok.getKind() == tok::eof)
           return false;
         return true;
@@ -51,40 +48,40 @@ class Parser {
     }
   }
 
-  AST *parseProgram();
+  bool parseProgram();
 
-  void parseImport();
+  bool parseImport();
 
-  void parseBlock();
+  bool parseBlock();
 
-  void parseDeclaration();
-  void parseConstantDeclaration();
-  void parseVariableDeclaration();
-  void parseProcedureDeclaration();
-  void parseFormalParameters();
-  void parseFormalParametersList();
-  void parseFormalParameter();
+  bool parseDeclaration();
+  bool parseConstantDeclaration();
+  bool parseVariableDeclaration();
+  bool parseProcedureDeclaration();
+  bool parseFormalParameters();
+  bool parseFormalParametersList();
+  bool parseFormalParameter();
 
   bool parseStatementSequence();
-  void parseStatement();
+  bool parseStatement();
   bool parseIfStatement();
-  void parseWhileStatement();
-  void parseExpList();
+  bool parseWhileStatement();
+  bool parseExpList();
   bool parseExpression();
-  void parseRelation();
-  void parseSimpleExpression();
-  void parseAdd();
-  void parseTerm();
-  void parseMulOperator();
-  void parseFactor();
-  void parseIdentList();
-  void parseQualident();
+  bool parseRelation();
+  bool parseSimpleExpression();
+  bool parseAddOperator();
+  bool parseTerm();
+  bool parseMulOperator();
+  bool parseFactor();
+  bool parseIdentList();
+  bool parseQualident();
 
 public:
   Parser(Lexer &Lex) : Lex(Lex), HasError(false) { advance(); }
 
   bool hasError() { return HasError; }
 
-  AST *parse();
+  bool parse();
 };
 #endif
