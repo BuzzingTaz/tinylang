@@ -4,5 +4,6 @@ add_tinylang_library(tinylangParser
   Parser.cpp
 
   LINK_LIBS
+  tinylangBasic
   tinylangLexer
   )

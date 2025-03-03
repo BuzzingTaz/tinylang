@@ -14,15 +14,14 @@ typedef std::vector<Ident *> IdentList;
 
 class Decl;
 typedef std::vector<Decl *> DeclList;
+class DeclFormPar;
+typedef std::vector<DeclFormPar *> FormParList;
 
 class Import;
 typedef std::vector<Import *> Imports;
 
 class Expr;
 typedef std::vector<Expr *> ExprList;
-
-class FormPar;
-typedef std::vector<FormPar *> FormParList;
 
 class Stat;
 typedef std::vector<Stat *> StatSeq;
@@ -66,6 +65,9 @@ class DeclModule : public Decl {
   StatSeq BlockStatSeq;
 
 public:
+  DeclModule(Decl *EnclosingDecl, Ident *Id)
+      : Decl(DK_Module, EnclosingDecl, Id) {}
+
   DeclModule(Decl *EnclosingDecl, Ident *Id, DeclList &Decls, StatSeq &Stats)
       : Decl(DK_Module, EnclosingDecl, Id), BlockDeclList(Decls),
         BlockStatSeq(Stats) {};
@@ -129,6 +131,7 @@ class DeclProc : public Decl {
   DeclType *RetType;
 
 public:
+  DeclProc(Decl *EnclosingDecl, Ident *Id) : Decl(DK_Proc, EnclosingDecl, Id) {}
   DeclProc(Decl *EnclosingDecl, Ident *Id, FormParList Params,
            DeclType *RetType, DeclList &Decls, StatSeq &Stats)
       : Decl(DK_Proc, EnclosingDecl, Id), FormParams(Params),
@@ -139,7 +142,7 @@ public:
   const DeclList &getDecls() { return BlockDeclList; }
   void setDecls(DeclList &D) { BlockDeclList = D; }
   const StatSeq &getStmts() { return BlockStatSeq; }
-  void setStmts(StatSeq &L) { BlockStatSeq = L; }
+  void setStats(StatSeq &L) { BlockStatSeq = L; }
   DeclType *getRetType() { return RetType; }
   void setRetType(DeclType *Ty) { RetType = Ty; };
 

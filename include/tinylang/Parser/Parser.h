@@ -1,9 +1,12 @@
 #ifndef TINYLANG_PARSER_PARSER_H
 #define TINYLANG_PARSER_PARSER_H
 
+#include "tinylang/AST/AST.h"
+#include "tinylang/Basic/Diagnostic.h"
 #include "tinylang/Basic/TokenKinds.h"
 #include "tinylang/Lexer/Lexer.h"
 #include "tinylang/Parser/NTStart.h"
+#include "tinylang/Sema/Sema.h"
 #include "llvm/Support/raw_ostream.h"
 #include <sys/types.h>
 #include <unordered_set>
@@ -11,13 +14,13 @@
 class Parser {
   Lexer &Lex;
   Token Tok;
-  bool HasError;
   NTstart StartSet;
+  Sema &Actions;
 
   void error() {
     llvm::errs() << "Error: unexpected token: " << Tok.getText() << '\n';
-    HasError = true;
   }
+  DiagnosticsEngine &getDiagnostics() const { return Lex.getDiagnostics(); }
 
   void advance() { Lex.next(Tok); }
 
@@ -48,40 +51,39 @@ class Parser {
     }
   }
 
-  bool parseProgram();
+  bool parseProgram(DeclModule *&D);
 
   bool parseImport();
 
-  bool parseBlock();
+  bool parseBlock(DeclList &Decls, StatSeq &Stats);
 
-  bool parseDeclaration();
-  bool parseConstantDeclaration();
-  bool parseVariableDeclaration();
-  bool parseProcedureDeclaration();
-  bool parseFormalParameters();
-  bool parseFormalParametersList();
-  bool parseFormalParameter();
+  bool parseDeclaration(DeclList &Decls);
+  bool parseConstantDeclaration(DeclList &Decls);
+  bool parseVariableDeclaration(DeclList &Decls);
+  bool parseProcedureDeclaration(DeclList &ParentDecls);
+  bool parseFormalParameters(FormParList &Params, Decl *&RetType);
+  bool parseFormalParametersList(FormParList &Params);
+  bool parseFormalParameter(FormParList &Params);
 
-  bool parseStatementSequence();
-  bool parseStatement();
-  bool parseIfStatement();
-  bool parseWhileStatement();
-  bool parseExpList();
-  bool parseExpression();
-  bool parseRelation();
-  bool parseSimpleExpression();
-  bool parseAddOperator();
-  bool parseTerm();
-  bool parseMulOperator();
-  bool parseFactor();
-  bool parseIdentList();
-  bool parseQualident();
+  bool parseStatementSequence(StatSeq &Stats);
+  bool parseStatement(StatSeq &Stats);
+  bool parseIfStatement(StatSeq &Stats);
+  bool parseWhileStatement(StatSeq &Stats);
+  bool parseReturnStatement(StatSeq &Stats);
+  bool parseExpList(ExprList &Exprs);
+  bool parseExpression(Expr *&E);
+  bool parseRelation(OpInfo &Op);
+  bool parseSimpleExpression(Expr *&E);
+  bool parseAddOperator(OpInfo &Op);
+  bool parseTerm(Expr *&E);
+  bool parseMulOperator(OpInfo &Op);
+  bool parseFactor(Expr *&E);
+  bool parseIdentList(IdentList &Ids);
+  bool parseQualident(Decl *&Decl);
 
 public:
-  Parser(Lexer &Lex) : Lex(Lex), HasError(false) { advance(); }
+  Parser(Lexer &Lex, Sema &Actions) : Lex(Lex), Actions(Actions) { advance(); };
 
-  bool hasError() { return HasError; }
-
-  bool parse();
+  DeclModule *parse();
 };
 #endif
